@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>강원 앙상블 달력 — 64개 시나리오로 보는 보름</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EFF3F6;        /* 안개 종이 */
+    --ink:#1B2D3C;          /* 먹남 */
+    --ink-soft:#5A6B78;
+    --cell:#FFFFFF;
+    --rain-lo:#C9DCEB;      /* 비 잉크 램프 (연함) */
+    --rain-hi:#0E3A5D;      /* 비 잉크 램프 (짙음) */
+    --line:#D5DEE4;
+    --dim:#93A3AD;
+    --focus:#0E3A5D;
+    font-size:16px;
+  }
+  *{box-sizing:border-box;margin:0}
+  body{
+    background:var(--paper);color:var(--ink);
+    font-family:"IBM Plex Sans KR",system-ui,sans-serif;
+    line-height:1.55;padding:2rem 1.25rem 3rem;
+  }
+  .mono{font-family:"IBM Plex Mono",monospace}
+  header{max-width:72rem;margin:0 auto 1.75rem}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.12em;
+    color:var(--ink-soft);text-transform:uppercase;margin-bottom:.4rem}
+  h1{font-size:clamp(1.5rem,3.5vw,2.1rem);font-weight:700;letter-spacing:-.01em}
+  h1 small{font-weight:400;color:var(--ink-soft);font-size:.6em;margin-left:.5em}
+  .runinfo{font-family:"IBM Plex Mono",monospace;font-size:.75rem;color:var(--ink-soft);margin-top:.5rem}
+
+  .board{max-width:72rem;margin:0 auto;background:var(--cell);
+    border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .scroll{overflow-x:auto}
+  table{border-collapse:collapse;width:max-content;min-width:100%}
+  th,td{padding:0;border-bottom:1px solid var(--line)}
+  thead th{position:sticky;top:0;background:var(--cell);z-index:2;
+    font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.7rem;
+    color:var(--ink-soft);padding:.6rem .35rem;text-align:center;min-width:3.6rem}
+  thead th .dow{display:block;font-size:.66rem}
+  thead th.weekend{color:var(--ink)}
+  thead th.today .d{border:2px solid var(--ink);border-radius:6px;padding:.05rem .3rem;display:inline-block}
+  tbody th{position:sticky;left:0;background:var(--cell);z-index:1;
+    text-align:left;padding:.55rem .8rem;font-weight:500;font-size:.85rem;
+    border-right:1px solid var(--line);min-width:8.2rem}
+  tbody th .note{display:block;font-family:"IBM Plex Mono",monospace;
+    font-size:.65rem;color:var(--ink-soft);font-weight:400}
+  td button{
+    appearance:none;border:0;background:transparent;width:100%;height:100%;
+    padding:.7rem .2rem;font-family:"IBM Plex Mono",monospace;font-size:.82rem;
+    color:var(--ink);cursor:pointer;display:block;
+  }
+  td button:focus-visible{outline:3px solid var(--focus);outline-offset:-3px;border-radius:4px}
+  td button{position:relative}
+  .mark{position:absolute;top:4px;right:5px;width:7px;height:7px;border-radius:50%;
+    border:1.5px solid currentColor;opacity:.9}
+  .mark.wet{background:currentColor}
+  .obsline{margin-top:1rem;padding-top:.8rem;border-top:1px dashed var(--line);
+    font-size:.88rem;font-weight:500}
+  .obsline .mono{font-weight:400;font-size:.72rem;color:var(--ink-soft)}
+  td button.sel{box-shadow:inset 0 0 0 2px var(--ink);border-radius:4px}
+  td.partial button{color:var(--dim)}
+  td.far button{opacity:.62}
+  .farband{font-family:"IBM Plex Mono",monospace;font-size:.68rem;color:var(--ink-soft);
+    padding:.45rem .8rem;border-top:1px dashed var(--line)}
+
+  /* 상세 패널 */
+  #detail{max-width:72rem;margin:1.25rem auto 0;background:var(--cell);
+    border:1px solid var(--line);border-radius:10px;padding:1.25rem 1.4rem;
+    display:none}
+  #detail.open{display:block;animation:rise .25s ease-out}
+  @keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion: reduce){#detail.open{animation:none}}
+  #detail h2{font-size:1.05rem;font-weight:700;margin-bottom:.2rem}
+  #detail .lede{font-size:.9rem;color:var(--ink-soft);margin-bottom:1rem}
+  .detail-grid{display:grid;grid-template-columns:auto 1fr;gap:1.5rem;align-items:start}
+  @media (max-width:40rem){.detail-grid{grid-template-columns:1fr}}
+  /* 시그니처: 64칸 멤버 격자 */
+  .members{display:grid;grid-template-columns:repeat(8,1.1rem);grid-auto-rows:1.1rem;gap:3px}
+  .members i{border-radius:3px;background:var(--paper);border:1px solid var(--line)}
+  .members i.wet{background:var(--rain-hi);border-color:var(--rain-hi)}
+  .mem-cap{font-family:"IBM Plex Mono",monospace;font-size:.68rem;color:var(--ink-soft);margin-top:.5rem}
+  dl{display:grid;grid-template-columns:auto 1fr;gap:.3rem .9rem;font-size:.88rem}
+  dt{color:var(--ink-soft)}
+  dd{font-family:"IBM Plex Mono",monospace}
+
+  footer{max-width:72rem;margin:2rem auto 0;font-size:.75rem;color:var(--ink-soft)}
+  footer p{margin-bottom:.35rem}
+  footer a{color:inherit}
+  .warn{border-left:3px solid var(--ink);padding-left:.7rem}
+</style>
+</head>
+<body>
+<header>
+  <p class="eyebrow">Gangwon Ensemble Ledger · WeatherNext 2 × 64 members</p>
+  <h1>강원 앙상블 달력 <small>64개 시나리오로 보는 보름</small></h1>
+  <p class="runinfo" id="runinfo">데이터 불러오는 중…</p>
+</header>
+
+<div class="board">
+  <div class="scroll"><table id="grid" aria-label="지점별 일별 강수 확률"></table></div>
+  <p class="farband">칸의 숫자는 <span class="mono">비 올 확률(%)</span> — 64개 시나리오 중 일 강수 1mm 이상인 시나리오의 비율. 짙을수록 확률이 높습니다. 열흘 이후는 시나리오가 넓게 갈리는 구간이라 옅게 표시합니다. 오늘과 지나간 칸의 작은 점은 실제 관측 — <span class="mono">●</span> 비 왔음(1mm↑), <span class="mono">○</span> 안 왔음. 칸을 누르면 그날의 상세가 열립니다.</p>
+</div>
+
+<section id="detail" aria-live="polite"></section>
+
+<footer>
+  <p class="warn">이 페이지는 실험적 AI 예보 데이터의 개인 연구용 시각화이며 공식 예보가 아닙니다. 공식 예보·특보는 <a href="https://www.weather.go.kr" rel="noopener">기상청 날씨누리</a>를 확인하세요.</p>
+  <p>Forecast: Google DeepMind WeatherNext 2 · Weather data by <a href="https://open-meteo.com/" rel="noopener">Open-Meteo.com</a> (CC BY 4.0)</p>
+</footer>
+
+<script>
+const DOW = ["일","월","화","수","목","금","토"];
+const FAR_FROM = 10; // D+10부터 옅게
+
+function kstToday(){
+  const now = new Date(Date.now() + 9*3600*1000);
+  return now.toISOString().slice(0,10);
+}
+function ramp(p){ // 0~1 → 종이색~비잉크
+  if(p <= 0) return "var(--cell)";
+  const a = 0.12 + 0.88*p;
+  return `color-mix(in srgb, var(--rain-hi) ${Math.round(a*70)}%, var(--cell))`;
+}
+function textColor(p){ return p > 0.55 ? "#F4F8FB" : "var(--ink)"; }
+
+let DATA = null, selBtn = null;
+
+async function init(){
+  const res = await fetch("data.json", {cache:"no-store"});
+  DATA = await res.json();
+  const today = kstToday();
+
+  document.getElementById("runinfo").textContent =
+    `런 ${DATA.run.dir} · 생성 ${DATA.generated_at_kst} KST · ${DATA.members}멤버 · 기준 ${DATA.wet_threshold_mm}mm/일`;
+
+  const grid = document.getElementById("grid");
+  const dates = DATA.dates;
+  const todayIdx = dates.indexOf(today);
+
+  let head = "<thead><tr><th scope='col'>지점</th>";
+  dates.forEach((d,i)=>{
+    const dt = new Date(d+"T00:00:00+09:00");
+    const dow = dt.getUTCDay(); // KST 자정 기준
+    const wk = (dow===0||dow===6) ? " weekend" : "";
+    const td = d===today ? " today" : "";
+    head += `<th scope='col' class='${wk}${td}'><span class='d'>${d.slice(5).replace("-","/")}</span><span class='dow'>${DOW[new Date(d+"T12:00:00+09:00").getDay()]}</span></th>`;
+  });
+  head += "</tr></thead>";
+
+  let body = "<tbody>";
+  DATA.stations.forEach(st=>{
+    body += `<tr><th scope='row'>${st.name}<span class='note'>${st.note}</span></th>`;
+    dates.forEach((d,i)=>{
+      const day = st.days[d];
+      if(!day){ body += "<td></td>"; return; }
+      const p = day.wet1 / DATA.members;
+      const partial = day.steps < 4 ? " partial" : "";
+      const far = (todayIdx >= 0 && i - todayIdx >= FAR_FROM) ? " far" : "";
+      const pct = Math.round(p*100);
+      const ob = DATA.obs?.[d]?.stations?.[st.slug];
+      let mark = "", obsAria = "";
+      if(ob && ob.rn_day != null){
+        const wet = ob.rn_day >= DATA.wet_threshold_mm;
+        mark = `<span class='mark ${wet ? "wet" : ""}' aria-hidden='true'></span>`;
+        obsAria = wet ? `, 실제 비 ${ob.rn_day}mm 관측` : ", 실제 비 없음";
+      }
+      body += `<td class='c${partial}${far}' style='background:${ramp(p)}'>` +
+        `<button style='color:${textColor(p)}' data-s='${st.slug}' data-d='${d}' ` +
+        `aria-label='${st.name} ${d} 비 올 확률 ${pct}%${obsAria}'>${pct}${mark}</button></td>`;
+    });
+    body += "</tr>";
+  });
+  body += "</tbody>";
+  grid.innerHTML = head + body;
+
+  grid.addEventListener("click", e=>{
+    const b = e.target.closest("button[data-s]");
+    if(b) showDetail(b);
+  });
+}
+
+function showDetail(btn){
+  if(selBtn) selBtn.classList.remove("sel");
+  selBtn = btn; btn.classList.add("sel");
+
+  const st = DATA.stations.find(s=>s.slug===btn.dataset.s);
+  const d = btn.dataset.d;
+  const day = st.days[d];
+  const pct = Math.round(day.wet1/DATA.members*100);
+  const dt = new Date(d+"T12:00:00+09:00");
+  const label = `${d.slice(5).replace("-","월 ")}일 (${DOW[dt.getDay()]})`;
+
+  const obsBlock = DATA.obs?.[d];
+  const ob = obsBlock?.stations?.[st.slug];
+  let obsLine = "";
+  if(ob){
+    const rn = ob.rn_day != null
+      ? (ob.rn_day >= DATA.wet_threshold_mm
+          ? `비 <strong>${ob.rn_day}mm</strong> 관측됨`
+          : `비 없음 (${ob.rn_day}mm)`)
+      : "강수 관측값 없음";
+    const ta = ob.ta != null ? ` · 기온 ${ob.ta}°C` : "";
+    obsLine = `<p class="obsline">실제로는 — ${rn}${ta} ` +
+      `<span class="mono">(${obsBlock.as_of} KST 기준 · ASOS ${st.name})</span></p>`;
+  }
+
+  const cells = [...day.wet_flags].map(f=>`<i class='${f==="1"?"wet":""}'></i>`).join("");
+  const heavy = day.wet5 > 0 ? `그중 ${day.wet5}개는 5mm 이상.` : "";
+  const partial = day.steps < 4 ? " · 이 날짜는 예보 구간이 일부만 걸쳐 있어 참고만 하세요." : "";
+
+  const el = document.getElementById("detail");
+  el.innerHTML = `
+    <h2>${st.name} · ${label}</h2>
+    <p class="lede">64개 시나리오 중 <strong>${day.wet1}개</strong>에서 비(일 1mm↑) — 확률 ${pct}%. ${heavy}${partial}</p>
+    <div class="detail-grid">
+      <div>
+        <div class="members" role="img" aria-label="64개 멤버 중 ${day.wet1}개가 비 시나리오">${cells}</div>
+        <p class="mem-cap">한 칸 = 시나리오 하나 · 짙은 칸 = 비</p>
+      </div>
+      <dl>
+        <dt>예상 강수량 (중앙값)</dt><dd>${day.precip_med} mm</dd>
+        <dt>많이 오면 (상위 10%)</dt><dd>${day.precip_p90} mm</dd>
+        <dt>기온</dt><dd>${day.tmin_med ?? "–"} ~ ${day.tmax_med ?? "–"} °C</dd>
+        <dt>최고기온 폭 (P10–P90)</dt><dd>${day.tmax_p10 ?? "–"} ~ ${day.tmax_p90 ?? "–"} °C</dd>
+        <dt>최대 풍속 (중앙값)</dt><dd>${day.wind_max_med} m/s</dd>
+        <dt>강하면 (상위 10%)</dt><dd>${day.wind_max_p90} m/s</dd>
+      </dl>
+    </div>
+    ${obsLine}`;
+  el.classList.add("open");
+  el.scrollIntoView({behavior:"smooth", block:"nearest"});
+}
+
+init().catch(err=>{
+  document.getElementById("runinfo").textContent =
+    "data.json 을 불러오지 못했습니다 — aggregate.py 를 먼저 실행했는지, 웹서버로 열었는지 확인하세요. (" + err + ")";
+});
+</script>
+</body>
+</html>
